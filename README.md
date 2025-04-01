@@ -1,174 +1,94 @@
-# jQuery.i18n.properties
+# Java DDD架构层次关系图
 
-## About
-**jQuery.i18n.properties** is a lightweight jQuery plugin for providing internationalization to javascript from ‘.properties’ files, just like in Java Resource Bundles. It loads and parses resource bundles (.properties) based on provided language and country codes (ISO-639 and ISO-3166) or language reported by browser.
-
-Resource bundles are ‘.properties‘ files containing locale specific key-value pairs. The use of ‘.properties‘ files for translation is specially useful when sharing i18n files between Java and Javascript projects. This plugin loads the default file (eg, Messages.properties) first and then locale specific files (Messages_pt.properties, then Messages_pt_BR.properties), so that a default value is always available when there is no translation provided. Translation keys will be available to developer as javascript variables/functions (functions, if translated value contains substitutions (eg, {0}) or as a map.
-
-This plugin was inspired on the [Localisation assistance for jQuery from Keith Wood](http://web.archive.org/web/20140517213544/http://keith-wood.name/localisation.html).
-
-## Latest Version
-
-1.2.7
-
-
-## Features
-* Use Java standard ‘.properties‘ files for translations
-* Use standard ISO-639 for language code and ISO-3166 for country code
-* Sequential loading of resource bundles from base language to user-specified/browser-specified so there is always a default value for an untranslated string (eg: Messages.properties, Messages_pt.properties, Messages_pt_BR.properties)
-* Use browser reported language if no language was specified
-* Placeholder substitution in resource bundle strings (eg, msg_hello = Hello {0}!!)
-* Suport for namespaces in keys (eg, com.company.msgs.hello = Hello!)
-* Support for multi-line property values
-* Resource bundle keys available as Javascript vars/functions or as a map
-* Support for namespacing.
-
-
-## History
-This project was originally created by [Nuno Miguel Correia Serra Fernandes](http://nunogrilo.com)
-and published on Google Code. In 2014 it has been migrated to Github which is now the [official repository](https://github.com/jquery-i18n-properties/jquery-i18n-properties).
-
-Since then, other great contributors joined the project (see Credits section below).
-
-It has been used in various projects, including the [WebRTC phone JSCommunicator](http://jscommunicator.org) (see the demo there to
-see jquery-i18n-properties in action), some [Sakai Project](http://sakaiproject.org) tools, etc.
-
-
-## Example
-Take as an example the following *.properties* files:
-
-**Messages.properties:**
-
-```ini
-# This line is ignored by the plugin
-msg_hello = Hello
-msg_world = World
-msg_complex = Good morning {0}!
 ```
+                                      前端请求
+                                         │
+                                         ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                               表示层 (Presentation Layer)                    │
+│                                                                             │
+│  ┌─────────────────┐                                                        │
+│  │    Controller   │ 接收用户请求，返回响应                                  │
+│  │  (表现层适配器)  │ @RestController/@Controller                            │
+│  └────────┬────────┘                                                        │
+└───────────┼─────────────────────────────────────────────────────────────────┘
+            │ 调用应用服务
+            ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                               应用层 (Application Layer)                     │
+│                                                                             │
+│  ┌─────────────────┐    ┌─────────────────┐     ┌─────────────────┐         │
+│  │   Application   │    │     Command     │     │      Query      │         │
+│  │     Service     │    │     Handler     │     │     Handler     │         │
+│  │   (应用服务)     │    │   (命令处理器)  │     │   (查询处理器)  │         │
+│  └────────┬────────┘    └────────┬────────┘     └────────┬────────┘         │
+└───────────┼─────────────────────┼─────────────────────────────────────────┬─┘
+            │                     │                                         │
+            │ 协调领域对象          │ 处理命令                                │ 执行查询
+            ▼                     ▼                                         ▼
+┌─────────────────────────────────────────────────────────────────────┐  ┌──────────────────┐
+│                         领域层 (Domain Layer)                         │  │     查询层       │
+│                                                                      │  │  (Query Layer)   │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐   │  │                  │
+│  │     Domain      │    │     Domain      │    │     Domain      │   │  │ ┌──────────────┐ │
+│  │     Service     │    │     Entity      │    │  Value Object   │   │  │ │    Query     │ │
+│  │   (领域服务)     │    │   (实体对象)    │    │  (值对象)        │   │  │ │   Object    │ │
+│  └────────┬────────┘    └────────┬────────┘    └─────────────────┘   │  │ │ (查询对象)   │ │
+│           │                      │                                    │  │ └──────────────┘ │
+│           └──────────────────────┘                                    │  │                  │
+└───────────────────────────────────┬────────────────────────────────────┘  └────────┬────────┘
+                                    │ 执行持久化                                     │
+                                    ▼                                               │
+┌───────────────────────────────────────────────────────────────────────────────────┴─────────┐
+│                                    基础设施层 (Infrastructure Layer)                          │
+│                                                                                               │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐     │
+│  │   Repository    │    │     Mapper      │    │    Database     │    │  External API   │     │
+│  │    Interface    │    │                 │    │   Connection    │    │     Adapter     │     │
+│  │  (仓储接口)      │    │  (ORM映射)      │    │  (数据库连接)    │    │  (外部API适配器) │     │
+│  └────────┬────────┘    └────────┬────────┘    └────────┬────────┘    └────────┬────────┘     │
+│           │                      │                      │                      │              │
+│           └──────────────────────┴──────────────────────┴──────────────────────┘              │
+└───────────────────────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                                数据库/外部系统
 
-**Messages\_pt.properties:**
+## 各层职责说明
 
-```ini
-# We only provide a translation for the 'msg_hello' key
-msg_hello = Bom dia
-```
+### 表示层 (Presentation Layer)
+- **控制器 (Controller)**: 负责处理HTTP请求，将请求委托给应用层，并将结果返回给客户端
+- 不包含业务逻辑，只负责请求解析、参数校验、结果封装等
 
-**Messages\_pt\_BR.properties:**
+### 应用层 (Application Layer)
+- **应用服务 (Application Service)**: 编排领域对象完成用户用例
+- **命令处理器 (Command Handler)**: 处理写操作命令
+- **查询处理器 (Query Handler)**: 处理读操作请求
+- 不包含核心业务逻辑，只负责协调
 
-```ini
-# We only provide a translation for the 'msg_hello' key
-msg_hello = Olá
-```
+### 领域层 (Domain Layer)
+- **领域服务 (Domain Service)**: 封装跨实体的复杂业务逻辑
+- **实体 (Entity)**: 具有身份标识的领域对象，包含业务规则和状态变更逻辑
+- **值对象 (Value Object)**: 无身份标识的不可变对象，用于描述领域概念
+- **聚合根 (Aggregate Root)**: 保证业务完整性的实体集合入口
+- **领域事件 (Domain Event)**: 描述领域中发生的事件
 
-Now, suppose these files are located on the ``bundle/`` folder. One can invoke the plugin like below:
+### 查询层 (Query Layer)
+- **查询对象 (Query Object)**: 封装查询逻辑，直接操作数据源进行高效查询
+- 通常绕过领域层，采用CQRS模式提高查询性能
 
-```javascript
-// This will initialize the plugin 
-// and show two dialog boxes: one with the text "Olá World"
-// and other with the text "Good morning John!" 
-jQuery.i18n.properties({
-    name:'Messages', 
-    path:'bundle/', 
-    mode:'both',
-    language:'pt_BR',
-    async: true,
-    callback: function() {
-        // We specified mode: 'both' so translated values will be
-        // available as JS vars/functions and as a map
+### 基础设施层 (Infrastructure Layer)
+- **仓储实现 (Repository Implementation)**: 实现领域对象的持久化
+- **ORM映射 (Mapper)**: 对象关系映射
+- **数据库连接 (Database Connection)**: 与数据库的交互
+- **外部服务适配器 (External Service Adapter)**: 与外部系统的集成
 
-        // Accessing a simple value through the map
-        jQuery.i18n.prop('msg_hello');
-        // Accessing a value with placeholders through the map
-        jQuery.i18n.prop('msg_complex', 'John');
+## 关键DDD概念
 
-        // Accessing a simple value through a JS variable
-        alert(msg_hello +' '+ msg_world);
-        // Accessing a value with placeholders through a JS function
-        alert(msg_complex('John'));
-    }
-});
-```
-This will initialize the plugin (loading bundle files and parsing them) and show a dialog box with the text “Olá World” and other with “Good morning John!”. The english word “World” is shown because we didn’t provide a translation for the `msg_world` key. Also notice that keys are available as a map and also as javascript variables (for simple strings) and javascript functions (for strings with placeholders for substitution).
-
-## Asynchronous Language File Loading
-
-Synchronous Ajax has now been deprecated and will be removed at some point in the future, so web developers need to
-start thinking about writing their code as callbacks (https://xhr.spec.whatwg.org/).
-
-With this in mind ...
-
-If you supply the flag 'async' on the settings and set it to true, all ajax calls are executed asynchronously and the
-supplied callback is called after the language files have all been downloaded and parsed. If you leave the flag off,
-or set it to false, the behaviour is as before: all the files are parsed synchronously and the callback is called at the
-end of the process.
-
-
-## Usage
-
-
-### Using the plugin
-1. Include it on your ``<head>`` section:
-
-```html
-<script type="text/javascript" language="JavaScript"
-  src="js/jquery.i18n.properties-min.js"></script>
-```
-
-2. Initialize the plugin (minimal usage, will use language reported by browser), and access a translated value (assuming a key named ‘org.somekey‘ exists, it will be setup as a variable you can use directly in your Javascript):
-
-```html
-<script>
-	jQuery.i18n.properties({
-  		name: 'Messages', 
-  		callback: function(){ alert( org.somekey ); }
-	});
-</script>
-```
-
-### Additional requirement on Firefox
-If using Firefox and a Tomcat webapp, you may get a `syntax error` in the Javascript console. The solution is to tell Tomcat the properties files should be interpreted as `text/plain`. To do this, add the following to your web.xml:
-`
-<mime-mapping> 
-        <extension>properties</extension>
-        <mime-type>text/plain</mime-type> 
-</mime-mapping>
-`
-
-### Building a minified JavaScript file
-
-1. Install the closure compiler tool:
-
-   ``apt-get update && apt-get install closure-compiler``
-
-2. Run it:
-
-   ``closure-compiler --js jquery.i18n.properties.js \
-                    --js_output_file jquery.i18n.properties.min.js``
-   
-
-### Options             
-
-Option | Description | Notes
------- | ----------- | -----
-**name**   | Partial name (or names) of files representing resource bundles (eg, ‘Messages’ or ['Msg1','Msg2']). Defaults to 'Messages' | Optional String or String[] |
-**language** | ISO-639 Language code and, optionally, ISO-3166 country code (eg, ‘en’, ‘en_US’, ‘pt_BR’). If not specified, language reported by the browser will be used instead. | Optional String |
-**path** | Path to directory that contains ‘.properties‘ files to load. | Optional String |
-**namespace** | The namespace that you want your keys to be stored under. You'd access these keys like this: $.i18n.map\[namespace\]\[key\]. Using a namespace minimises the chances of key clashes and overwrites. | Optional String |
-**mode** | Option to have resource bundle keys available as Javascript vars/functions OR as a map. The ‘map’ option is mandatory if your bundle keys contain Javascript Reserved Words. Possible options: ‘vars’ (default), ‘map’ or ‘both’. | Optional String |
-**debug** | Option to turn on console debug statement. Possible options: true or false. | Optional boolean |
-**cache** | Whether bundles should be cached by the browser, or forcibly reloaded on each page load. Defaults to false (i.e. forcibly reloaded). | Optional boolean |
-**encoding** | The encoding to request for bundles. Property file resource bundles are specified to be in ISO-8859-1 format. Defaults to UTF-8 for backward compatibility. | Optional String |
-**callback** | Callback function to be called uppon script execution completion. | Optional function() |
-    
-                    
-## Copyright, Credits and License
-Copyright © 2011 Nuno Miguel Correia Serra Fernandes (nunogrilo.com)
-
-Special thanks to great contributors:
-
-* [Daniel Pocock](https://github.com/dpocock)
-* [mlohbihler](https://github.com/mlohbihler)
-* [Guillaume Gerbaud](https://github.com/ggerbaud)
-* [Adrian Fish](https://github.com/adrianfish)
-
-Licensed under the [MIT License](LICENSE).
+- **限界上下文 (Bounded Context)**: 明确业务边界，构建统一语言
+- **通用语言 (Ubiquitous Language)**: 团队共享的业务术语体系
+- **聚合 (Aggregate)**: 确保业务不变性的对象集合
+- **实体 (Entity)**: 有唯一标识的对象
+- **值对象 (Value Object)**: 无标识，通过属性值定义的对象
+- **领域事件 (Domain Event)**: 领域中发生的事件
+- **仓储 (Repository)**: 提供对聚合的存取 
